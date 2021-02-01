@@ -22,9 +22,15 @@ class AGPublish extends Component {
     };
 
     if (shouldUpdate("cameraId", undefined, "cameraConfig")) {
-      this.updateTrack("camera", this.props.cameraConfig);
+      this.updateTrack({ type: "camera", config: this.props.cameraConfig });
     } else if (shouldUpdate("microphoneId", undefined, "micConfig")) {
-      this.updateTrack("mic", this.props.micConfig);
+      this.updateTrack({ type: "mic", config: this.props.micConfig });
+    } else if (shouldUpdate("encoderConfig", undefined, "cameraConfig")) {
+      this.updateTrack({
+        type: "camera",
+        config: this.props.cameraConfig,
+        updateType: "encoderConfig",
+      });
     }
   }
 
@@ -58,32 +64,23 @@ class AGPublish extends Component {
     }
   };
 
-  updateTrack = async (type = "", config) => {
-    const { client, container } = this.props;
-    const currTrack = type === "mic" ? this.audioTrack : this.videoTrack;
-    let track = null;
+  updateTrack = async ({ type, updateType, config }) => {
     try {
-      await client.unpublish(currTrack);
-      currTrack.stop();
-      currTrack.close();
       if (type === "camera") {
-        track = await AgoraRTC.createCameraVideoTrack(config);
-        this.videoTrack = track;
+        if (this.videoTrack && this.videoTrack !== null) {
+          if (updateType === "encoderConfig") {
+            await this.videoTrack.setEncoderConfiguration(config.encoderConfig);
+          } else {
+            await this.videoTrack.setDevice(config.cameraId);
+          }
+        }
       } else if (type === "mic") {
-        track = await AgoraRTC.createMicrophoneAudioTrack(config);
-        this.audioTrack = track;
-      } else {
-        track = await AgoraRTC.createScreenVideoTrack(config);
-        this.videoTrack = track;
+        if (this.audioTrack && this.audioTrack !== null) {
+          await this.audioTrack.setDevice(config.microphoneId);
+        }
       }
-      if (type === "camera" || type === "screen") {
-        track.play(container || "local_container");
-      } else {
-        track.play();
-      }
-      await client.publish(track);
     } catch (error) {
-      console.log("update track", error);
+      console.log("update device error: ", error);
     }
   };
 
