@@ -25,7 +25,12 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
   const selectHandler = React.useCallback(
     (e) => {
       if (connectState) {
-        onSelectChange(e.target.value, e.target.name);
+        onSelectChange(
+          e.target.name === "publishVideo" || e.target.name === "publishAudio"
+            ? e.target.checked
+            : e.target.value,
+          e.target.name
+        );
       }
     },
     [connectState, onSelectChange]
@@ -38,6 +43,12 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
     document
       .getElementById("profile")
       .addEventListener("change", selectHandler);
+    document
+      .getElementById("publishVideo")
+      .addEventListener("change", selectHandler);
+    document
+      .getElementById("publishAudio")
+      .addEventListener("change", selectHandler);
     return () => {
       document
         .getElementById("cameras")
@@ -47,6 +58,12 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
         .removeEventListener("change", selectHandler);
       document
         .getElementById("profile")
+        .removeEventListener("change", selectHandler);
+      document
+        .getElementById("publishVideo")
+        .removeEventListener("change", selectHandler);
+      document
+        .getElementById("publishAudio")
         .removeEventListener("change", selectHandler);
     };
   }, [selectHandler]);
@@ -106,7 +123,25 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
         <label>Video Profile</label>
         <select className="form-control" id="profile" name="profile"></select>
       </div>
-      <div className="d-flex mb-3">
+      <div className="form-check form-check-inline">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          id="publishVideo"
+          name="publishVideo"
+        />
+        <label className="form-check-label">Camera</label>
+      </div>
+      <div className="form-check form-check-inline">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          id="publishAudio"
+          name="publishAudio"
+        />
+        <label className="form-check-label">Microphone</label>
+      </div>
+      <div className="d-flex mb-3 mt-3">
         <button type="submit" className="btn btn-primary mr-3 flex-fill">
           Join
         </button>

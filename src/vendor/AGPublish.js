@@ -16,8 +16,14 @@ class AGPublish extends Component {
       value === undefined ? defaultValue : value;
 
     const shouldUpdate = (key, defaultValue, name) => {
-      const previous = cast(prevProps[name][key], defaultValue);
-      const current = cast(this.props[name][key], defaultValue);
+      const previous = cast(
+        key === "" ? prevProps[name] : prevProps[name][key],
+        defaultValue
+      );
+      const current = cast(
+        key === "" ? this.props[name] : this.props[name][key],
+        defaultValue
+      );
       return previous !== current;
     };
 
@@ -31,6 +37,10 @@ class AGPublish extends Component {
         config: this.props.cameraConfig,
         updateType: "encoderConfig",
       });
+    } else if (shouldUpdate("", undefined, "publishVideo")) {
+      this.setEnabled("camera", this.props.publishVideo);
+    } else if (shouldUpdate("", undefined, "publishAudio")) {
+      this.setEnabled("mic", this.props.publishAudio);
     }
   }
 
@@ -64,6 +74,18 @@ class AGPublish extends Component {
     }
   };
 
+  setEnabled = async (type, value) => {
+    try {
+      if (type === "camera") {
+        await this.videoTrack.setEnabled(value);
+      } else {
+        await this.audioTrack.setEnabled(value);
+      }
+    } catch (error) {
+      console.log("update enable state error:", error);
+    }
+  };
+
   updateTrack = async ({ type, updateType, config }) => {
     try {
       if (type === "camera") {
@@ -85,11 +107,28 @@ class AGPublish extends Component {
   };
 
   playAndPublish = async () => {
-    const { container, client, onPublishErr } = this.props;
+    const {
+      container,
+      client,
+      onPublishErr,
+      publishAudio,
+      publishVideo,
+    } = this.props;
     this.videoTrack.play(container || "local_container");
     if (client) {
       try {
-        await client.publish([this.videoTrack, this.audioTrack]);
+        if (publishAudio && publishVideo) {
+          await client.publish([this.videoTrack, this.audioTrack]);
+        } else if (publishVideo) {
+          await this.audioTrack.setEnabled(false);
+          await client.publish(this.videoTrack);
+        } else if (publishAudio) {
+          await this.videoTrack.setEnabled(false);
+          await client.publish(this.audioTrack);
+        } else {
+          await this.videoTrack.setEnabled(false);
+          await this.audioTrack.setEnabled(false);
+        }
       } catch (err) {
         if (onPublishErr && typeof onPublishErr === "function") {
           onPublishErr(err);
@@ -121,6 +160,13 @@ AGPublish.propTypes = {
   camera: PropTypes.string,
   mic: PropTypes.string,
   screenConfig: PropTypes.object,
+  publishVideo: PropTypes.bool,
+  publishAudio: PropTypes.bool,
+};
+
+AGPublish.defaultProps = {
+  publishAudio: true,
+  publishVideo: true,
 };
 
 export default AGPublish;
