@@ -1,6 +1,27 @@
 import React from "react";
 
 const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
+  const videoProfiles = [
+    { label: "480p_1", detail: "640×480, 15fps, 500Kbps", value: "480p_1" },
+    { label: "480p_2", detail: "640×480, 30fps, 1000Kbps", value: "480p_2" },
+    { label: "720p_1", detail: "1280×720, 15fps, 1130Kbps", value: "720p_1" },
+    { label: "720p_2", detail: "1280×720, 30fps, 2000Kbps", value: "720p_2" },
+    {
+      label: "1080p_1",
+      detail: "1920×1080, 15fps, 2080Kbps",
+      value: "1080p_1",
+    },
+    {
+      label: "1080p_2",
+      detail: "1920×1080, 30fps, 3000Kbps",
+      value: "1080p_2",
+    },
+    {
+      label: "200×640",
+      detail: "200×640, 30fps",
+      value: { width: 200, height: 640, frameRate: 30 },
+    }, // custom video profile
+  ];
   const selectHandler = React.useCallback(
     (e) => {
       if (connectState) {
@@ -14,6 +35,9 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
       .getElementById("cameras")
       .addEventListener("change", selectHandler);
     document.getElementById("mics").addEventListener("change", selectHandler);
+    document
+      .getElementById("profile")
+      .addEventListener("change", selectHandler);
     return () => {
       document
         .getElementById("cameras")
@@ -21,10 +45,24 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
       document
         .getElementById("mics")
         .removeEventListener("change", selectHandler);
+      document
+        .getElementById("profile")
+        .removeEventListener("change", selectHandler);
     };
   }, [selectHandler]);
+  const setProfiling = () => {
+    const profile = document.getElementById("profile");
+    videoProfiles.forEach((el) => {
+      let opt = document.createElement("OPTION");
+      opt.innerHTML = el.detail;
+      opt.value = el.value;
+      profile.append(opt);
+    });
+  };
   React.useEffect(() => {
+    setProfiling();
     getDevices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const getDevices = () => {
     navigator.mediaDevices.enumerateDevices().then((e) => {
@@ -63,6 +101,10 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
       <div className="form-group">
         <label>Microphone</label>
         <select className="form-control" id="mics" name="mic"></select>
+      </div>
+      <div className="form-group">
+        <label>Video Profile</label>
+        <select className="form-control" id="profile" name="profile"></select>
       </div>
       <div className="d-flex mb-3">
         <button type="submit" className="btn btn-primary mr-3 flex-fill">

@@ -10,6 +10,7 @@ class App extends Component {
       connectState: false,
       camera: "",
       mic: "",
+      profile: "",
     };
   }
   componentWillUnmount() {
@@ -34,8 +35,10 @@ class App extends Component {
   handleSubmit = (e) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
-    const { appid, token, channel, camera, mic } = Object.fromEntries(data);
-    this.setState({ ...this.state, camera, mic });
+    const { appid, token, channel, camera, mic, profile } = Object.fromEntries(
+      data
+    );
+    this.setState({ ...this.state, camera, mic, profile });
     this.client = createClient({
       codec: "vp8",
       mode: "rtc",
@@ -82,7 +85,10 @@ class App extends Component {
             <AGPublish
               client={this.client.client}
               container="local_video"
-              cameraConfig={{ cameraId: this.state.camera }}
+              cameraConfig={{
+                cameraId: this.state.camera,
+                encoderConfig: this.state.profile,
+              }}
               micConfig={{ microphoneId: this.state.mic }}
             />
           )}
