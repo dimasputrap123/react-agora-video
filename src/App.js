@@ -11,10 +11,12 @@ class App extends Component {
       camera: "",
       mic: "",
       profile: "",
+      publishVideo: false,
+      publishAudio: false,
     };
   }
   componentWillUnmount() {
-    this.client.disconnect();
+    if (this.client) this.client.disconnect();
   }
   joinHandler = (e) => {
     console.log(e);
@@ -35,10 +37,25 @@ class App extends Component {
   handleSubmit = (e) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
-    const { appid, token, channel, camera, mic, profile } = Object.fromEntries(
-      data
-    );
-    this.setState({ ...this.state, camera, mic, profile });
+    console.log(Object.fromEntries(data));
+    const {
+      appid,
+      token,
+      channel,
+      camera,
+      mic,
+      profile,
+      publishAudio,
+      publishVideo,
+    } = Object.fromEntries(data);
+    this.setState({
+      ...this.state,
+      camera,
+      mic,
+      profile,
+      publishVideo: publishVideo ? true : false,
+      publishAudio: publishAudio ? true : false,
+    });
     this.client = createClient({
       codec: "vp8",
       mode: "rtc",
@@ -85,6 +102,8 @@ class App extends Component {
             <AGPublish
               client={this.client.client}
               container="local_video"
+              publishVideo={this.state.publishVideo}
+              publishAudio={this.state.publishAudio}
               cameraConfig={{
                 cameraId: this.state.camera,
                 encoderConfig: this.state.profile,
