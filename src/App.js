@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import "./bootstrap.css";
 import "./App.css";
-import { AGPublish, createClient } from "./vendor";
+import { AGPublish, AGRemote, createClient } from "./vendor";
 import FormSetting from "./FormSetting";
 class App extends Component {
   constructor(props) {
@@ -13,16 +13,24 @@ class App extends Component {
       profile: "",
       publishVideo: false,
       publishAudio: false,
+      remoteJoin: [],
+      remotePublished: {},
     };
   }
   componentWillUnmount() {
     if (this.client) this.client.disconnect();
   }
   joinHandler = (e) => {
-    console.log(e);
+    this.setState((prevState) => ({
+      ...prevState,
+      remoteJoin: [...e],
+    }));
   };
   publishHandler = (e) => {
-    console.log(e);
+    this.setState((prevState) => ({
+      ...prevState,
+      remotePublished: { ...prevState.remotePublished, ...e },
+    }));
   };
   errHandler = (e) => {
     console.log(e);
@@ -76,6 +84,10 @@ class App extends Component {
       .disconnect()
       .then(() => {
         console.log("leaving success");
+        const grid = document.getElementById("gridVideo");
+        for (let i = 1; i < grid.childNodes.length; i++) {
+          grid.removeChild(grid.childNodes[i]);
+        }
       })
       .catch((err) => {
         console.log("leaving failed:", err);
@@ -84,6 +96,10 @@ class App extends Component {
 
   handleSelect = (value, name) => {
     this.setState({ ...this.state, [name]: value });
+  };
+
+  remoteError = (type, err) => {
+    console.log(err);
   };
 
   render() {
@@ -113,6 +129,19 @@ class App extends Component {
           )}
           <div className="gridVideo" id="gridVideo">
             <div className="video" id="local_video"></div>
+            {this.state.remoteJoin.map((el, id) => (
+              <React.Fragment key={id}>
+                <div id={`remote-${el.uid}`} className="video"></div>
+                {this.state.remotePublished.hasOwnProperty(el.uid) ? (
+                  <AGRemote
+                    client={this.client.client}
+                    remoteData={this.state.remotePublished[el.uid]}
+                    container={`remote-${el.uid}`}
+                    onError={this.remoteError}
+                  />
+                ) : null}
+              </React.Fragment>
+            ))}
           </div>
         </div>
       </div>

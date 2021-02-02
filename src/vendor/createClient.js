@@ -31,41 +31,57 @@ export default function createClient({
     throw new Error("mode must be live");
   }
 
-  let join = [];
-  let publish = [];
+  let join = {};
+  let publish = {};
   let uid = "";
   let client = null;
 
   client = AgoraRTC.createClient({ codec, mode, role });
 
   const userJoined = (user) => {
-    const index = join.findIndex((e) => e.uid === user.uid);
-    if (index < 0) {
-      join.push(user);
-      joinUpdated(join);
+    if (!join.hasOwnProperty(user.uid)) {
+      join = { ...join, [user.uid]: user };
+      joinUpdated(Object.values(join));
     }
   };
 
   const userLeft = (user, reason) => {
-    const index = join.findIndex((e) => e.uid === user.uid);
-    if (index < 0) {
-      join.splice(index, 1);
-      joinUpdated(join);
+    if (join.hasOwnProperty(user.uid)) {
+      delete join[user.uid];
+      delete publish[user.uid];
+      joinUpdated(Object.values(join));
+      publishUpdated(publish);
     }
   };
 
   const userPublished = (user, mediaType) => {
-    const index = publish.findIndex((e) => e.uid === user.uid);
-    if (index < 0) {
-      publish.push({ user, mediaType });
+    if (!publish.hasOwnProperty(user.uid)) {
+      publish = {
+        ...publish,
+        [user.uid]: { user, audio: false, video: false },
+      };
+    }
+    if (publish.hasOwnProperty(user.uid)) {
+      if (mediaType === "video") {
+        publish[user.uid].video = true;
+      } else if (mediaType === "audio") {
+        publish[user.uid].audio = true;
+      }
       publishUpdated(publish);
     }
   };
 
   const userUnpublished = (user, mediaType) => {
-    const index = publish.findIndex((e) => e.uid === user.uid);
-    if (index < 0) {
-      publish.splice(index, 1);
+    if (publish.hasOwnProperty(user.uid)) {
+      if (publish[user.uid].video || publish[user.uid].audio) {
+        if (mediaType === "video") {
+          publish[user.uid].video = false;
+        } else {
+          publish[user.uid].audio = false;
+        }
+      } else {
+        delete publish[user.uid];
+      }
       publishUpdated(publish);
     }
   };

@@ -1,3 +1,4 @@
+import AgoraRTC from "agora-rtc-sdk-ng";
 import React from "react";
 
 const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
@@ -82,7 +83,7 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const getDevices = () => {
-    navigator.mediaDevices.enumerateDevices().then((e) => {
+    AgoraRTC.getDevices().then((e) => {
       const cameras = document.getElementById("cameras");
       const mics = document.getElementById("mics");
       e.forEach((device) => {

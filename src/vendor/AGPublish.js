@@ -114,7 +114,10 @@ class AGPublish extends Component {
       publishAudio,
       publishVideo,
     } = this.props;
-    this.videoTrack.play(container || "local_container");
+    this.videoTrack.play(container || "local_container", {
+      fit: "cover",
+      mirror: true,
+    });
     if (client) {
       try {
         if (publishAudio && publishVideo) {
