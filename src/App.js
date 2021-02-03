@@ -13,10 +13,12 @@ class App extends Component {
       mic: "",
       profile: "",
       audioProfile: "",
+      screenProfile: "",
       publishVideo: false,
       publishAudio: false,
       remoteJoin: [],
       remotePublished: {},
+      screenShare: false,
     };
   }
   componentWillUnmount() {
@@ -44,6 +46,9 @@ class App extends Component {
       this.setState({ ...this.state, connectState: false });
     }
   };
+  handleScreenShare = () => {
+    this.setState({ ...this.state, screenShare: !this.state.screenShare });
+  };
   handleSubmit = (e) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
@@ -55,6 +60,7 @@ class App extends Component {
       mic,
       profile,
       audioProfile,
+      screenProfile,
       publishAudio,
       publishVideo,
     } = Object.fromEntries(data);
@@ -64,6 +70,7 @@ class App extends Component {
       mic,
       profile,
       audioProfile,
+      screenProfile,
       publishVideo: publishVideo ? true : false,
       publishAudio: publishAudio ? true : false,
     });
@@ -115,6 +122,7 @@ class App extends Component {
             onLeave={this.handleLeave}
             connectState={this.state.connectState}
             onSelectChange={this.handleSelect}
+            onScreen={this.handleScreenShare}
           />
         </div>
         <div className="col-8">
@@ -132,6 +140,11 @@ class App extends Component {
                 microphoneId: this.state.mic,
                 encoderConfig: this.state.audioProfile,
               }}
+              screenShare={this.state.screenShare}
+              screenConfig={{ encoderConfig: this.state.screenProfile }}
+              onScreenCancel={() =>
+                this.setState({ ...this.state, screenShare: false })
+              }
             />
           )}
           <div className="gridVideo" id="gridVideo">

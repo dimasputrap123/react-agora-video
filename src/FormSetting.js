@@ -1,7 +1,13 @@
 import AgoraRTC from "agora-rtc-sdk-ng";
 import React from "react";
 
-const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
+const FormSetting = ({
+  onSubmit,
+  onLeave,
+  onSelectChange,
+  connectState,
+  onScreen,
+}) => {
   const videoProfiles = [
     { label: "480p_1", detail: "640×480, 15fps, 500Kbps", value: "480p_1" },
     { label: "480p_2", detail: "640×480, 30fps, 1000Kbps", value: "480p_2" },
@@ -30,6 +36,11 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
     { label: "standard stereo", value: "standard_stereo" },
     { label: "high quality", value: "high_quality" },
     { label: "high quality stereo", value: "high_quality_stereo" },
+  ];
+  const screenProfiles = [
+    { label: "640 × 480", value: "480p_2" },
+    { label: "1280 × 720", value: "720p_2" },
+    { label: "1920 × 1080", value: "1080p_2" },
   ];
   const selectHandler = React.useCallback(
     (e) => {
@@ -85,6 +96,7 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
   const setProfiling = () => {
     const profile = document.getElementById("profile");
     const audioProfile = document.getElementById("audioProfile");
+    const screenProfile = document.getElementById("screenProfile");
     videoProfiles.forEach((el) => {
       let opt = document.createElement("OPTION");
       opt.innerHTML = el.detail;
@@ -96,6 +108,12 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
       opt.innerHTML = el.label;
       opt.value = el.value;
       audioProfile.append(opt);
+    });
+    screenProfiles.forEach((el) => {
+      let opt = document.createElement("OPTION");
+      opt.innerHTML = el.label;
+      opt.value = el.value;
+      screenProfile.append(opt);
     });
   };
   React.useEffect(() => {
@@ -153,6 +171,14 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
           name="audioProfile"
         ></select>
       </div>
+      <div className="form-group">
+        <label>Screen Profile</label>
+        <select
+          className="form-control"
+          id="screenProfile"
+          name="screenProfile"
+        ></select>
+      </div>
       <div className="form-check form-check-inline">
         <input
           className="form-check-input"
@@ -183,7 +209,12 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
           Leave
         </button>
       </div>
-      <button type="button" className="btn btn-info btn-block" id="screenBtn">
+      <button
+        type="button"
+        onClick={onScreen}
+        className="btn btn-info btn-block"
+        id="screenBtn"
+      >
         Sharescreen
       </button>
     </form>
