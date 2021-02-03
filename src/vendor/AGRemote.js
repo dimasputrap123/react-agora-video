@@ -18,29 +18,42 @@ export class AGRemote extends Component {
     const cast = (value, defaultValue) =>
       value === undefined ? defaultValue : value;
 
-    const shouldUpdate = (defaultValue, name) => {
-      const previous = cast(prevProps[name], defaultValue);
-      const current = cast(this.props[name], defaultValue);
+    const shouldUpdate = (key, defaultValue, name) => {
+      const previous = cast(
+        key === "" ? prevProps[name] : prevProps[name][key],
+        defaultValue
+      );
+      const current = cast(
+        key === "" ? this.props[name] : this.props[name][key],
+        defaultValue
+      );
       return previous !== current;
     };
-    if (shouldUpdate(undefined, "subscribeVideo")) {
+    if (shouldUpdate("", undefined, "subscribeVideo")) {
       this.controlSubs("video");
-    } else if (shouldUpdate(undefined, "subscribeAudio")) {
+    } else if (shouldUpdate("", undefined, "subscribeAudio")) {
       this.controlSubs("audio");
     }
-    this.reSubs();
+    if (
+      shouldUpdate("video", undefined, "remoteData") ||
+      shouldUpdate("audio", undefined, "remoteData")
+    ) {
+      this.reSubs();
+    }
   }
 
   controlSubs = (type) => {
     const { subscribeVideo, subscribeAudio } = this.props;
     if (type === "video") {
       if (subscribeVideo) {
+        console.log("ini control subs");
         this.subsRemote(type);
       } else {
         this.unSubsRemote(type);
       }
     } else if (type === "audio") {
       if (subscribeAudio) {
+        console.log("ini control subs");
         this.subsRemote(type);
       } else {
         this.unSubsRemote(type);
@@ -52,9 +65,11 @@ export class AGRemote extends Component {
     const { subscribeVideo, subscribeAudio, remoteData } = this.props;
     const { video, audio, user } = remoteData;
     if (video && user.videoTrack === undefined && subscribeVideo) {
+      console.log("ini reSubs");
       this.subsRemote("video");
     }
     if (audio && user.audioTrack === undefined && subscribeAudio) {
+      console.log("ini reSubs");
       this.subsRemote("audio");
     }
   };
@@ -66,16 +81,10 @@ export class AGRemote extends Component {
         await client.subscribe(remoteData.user, type);
         if (type === "video") {
           if (container) {
-            remoteData.user.videoTrack.play(container, {
-              mirror: true,
-              fit: "cover",
-            });
+            remoteData.user.videoTrack.play(container);
           } else {
             this.node.id = `remote-${remoteData.user.uid}`;
-            remoteData.user.videoTrack.play(`remote-${remoteData.user.uid}`, {
-              mirror: true,
-              fit: "cover",
-            });
+            remoteData.user.videoTrack.play(`remote-${remoteData.user.uid}`);
           }
         } else if (type === "audio") {
           remoteData.user.audioTrack.play();
