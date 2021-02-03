@@ -47,6 +47,8 @@ class AGPublish extends Component {
       this.setEnabled("camera", this.props.publishVideo);
     } else if (shouldUpdate("", undefined, "publishAudio")) {
       this.setEnabled("mic", this.props.publishAudio);
+    } else if (shouldUpdate("", undefined, "screenShare")) {
+      this.switchCameraScreen(this.props.screenShare ? "screen" : "camera");
     }
   }
 
@@ -75,7 +77,51 @@ class AGPublish extends Component {
       ]);
     } catch (error) {
       if (onError && typeof onError === "function") {
-        onError("track", error);
+        onError("createTrack", error);
+      }
+    }
+  };
+
+  switchCameraScreen = async (type) => {
+    const {
+      client,
+      cameraConfig,
+      container,
+      onError,
+      screenConfig,
+      onScreenCancel,
+    } = this.props;
+    let camOpt = { cameraId: "" };
+    if (cameraConfig && typeof cameraConfig === "object") {
+      camOpt = { ...camOpt, ...cameraConfig };
+    }
+    try {
+      await client.unpublish(this.videoTrack);
+      this.videoTrack.stop();
+      this.videoTrack.close();
+      this.videoTrack =
+        type === "screen"
+          ? await AgoraRTC.createScreenVideoTrack(screenConfig)
+          : await AgoraRTC.createCameraVideoTrack(camOpt);
+      await client.publish(this.videoTrack);
+      if (type === "screen") {
+        this.videoTrack.once("track-ended", () =>
+          this.switchCameraScreen("camera")
+        );
+      }
+      this.videoTrack.play(container || "local_container", {
+        fit: "cover",
+        mirror: true,
+      });
+    } catch (error) {
+      if (type === "screen") {
+        // this.switchCameraScreen("camera");
+        if (onScreenCancel && typeof onScreenCancel === "function") {
+          onScreenCancel();
+        }
+      }
+      if (onError && typeof onError === "function") {
+        onError("switchCameraScreen", error);
       }
     }
   };
@@ -188,6 +234,7 @@ class AGPublish extends Component {
 AGPublish.propTypes = {
   client: PropTypes.object,
   onUnpublish: PropTypes.func,
+  onScreenCancel: PropTypes.func,
   onError: PropTypes.func,
   container: PropTypes.string,
   camera: PropTypes.string,
@@ -195,11 +242,14 @@ AGPublish.propTypes = {
   screenConfig: PropTypes.object,
   publishVideo: PropTypes.bool,
   publishAudio: PropTypes.bool,
+  screenShare: PropTypes.bool,
 };
 
 AGPublish.defaultProps = {
   publishAudio: true,
   publishVideo: true,
+  screenShare: false,
+  screenConfig: {},
 };
 
 export default AGPublish;
