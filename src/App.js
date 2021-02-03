@@ -12,6 +12,7 @@ class App extends Component {
       camera: "",
       mic: "",
       profile: "",
+      audioProfile: "",
       publishVideo: false,
       publishAudio: false,
       remoteJoin: [],
@@ -53,6 +54,7 @@ class App extends Component {
       camera,
       mic,
       profile,
+      audioProfile,
       publishAudio,
       publishVideo,
     } = Object.fromEntries(data);
@@ -61,6 +63,7 @@ class App extends Component {
       camera,
       mic,
       profile,
+      audioProfile,
       publishVideo: publishVideo ? true : false,
       publishAudio: publishAudio ? true : false,
     });
@@ -125,7 +128,10 @@ class App extends Component {
                 cameraId: this.state.camera,
                 encoderConfig: this.state.profile,
               }}
-              micConfig={{ microphoneId: this.state.mic }}
+              micConfig={{
+                microphoneId: this.state.mic,
+                encoderConfig: this.state.audioProfile,
+              }}
             />
           )}
           <div className="gridVideo" id="gridVideo">
