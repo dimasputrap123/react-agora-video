@@ -22,3 +22,11 @@ body {
   margin: auto;
   background-color: gray;
 }
+
+.control {
+  display: none;
+}
+
+.remote:hover .control {
+  display: block;
+}
