@@ -109,10 +109,7 @@ class AGPublish extends Component {
           this.switchCameraScreen("camera")
         );
       }
-      this.videoTrack.play(container || "local_container", {
-        fit: "cover",
-        mirror: true,
-      });
+      this.videoTrack.play(container || "local_container");
     } catch (error) {
       if (type === "screen") {
         // this.switchCameraScreen("camera");
