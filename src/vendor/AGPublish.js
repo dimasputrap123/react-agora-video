@@ -37,6 +37,12 @@ class AGPublish extends Component {
         config: this.props.cameraConfig,
         updateType: "encoderConfig",
       });
+    } else if (shouldUpdate("encoderConfig", undefined, "micConfig")) {
+      this.updateTrack({
+        type: "mic",
+        config: this.props.micConfig,
+        updateType: "encoderConfig",
+      });
     } else if (shouldUpdate("", undefined, "publishVideo")) {
       this.setEnabled("camera", this.props.publishVideo);
     } else if (shouldUpdate("", undefined, "publishAudio")) {
@@ -53,7 +59,7 @@ class AGPublish extends Component {
   };
 
   createTrack = async () => {
-    const { onTrackErr, cameraConfig, micConfig } = this.props;
+    const { onError, cameraConfig, micConfig } = this.props;
     let camOpt = { cameraId: "" };
     let micOpt = { microphoneId: "" };
     if (cameraConfig && typeof cameraConfig === "object") {
@@ -67,14 +73,15 @@ class AGPublish extends Component {
         AgoraRTC.createCameraVideoTrack(camOpt),
         AgoraRTC.createMicrophoneAudioTrack(micOpt),
       ]);
-    } catch (err) {
-      if (onTrackErr && typeof onTrackErr === "function") {
-        onTrackErr(err);
+    } catch (error) {
+      if (onError && typeof onError === "function") {
+        onError("track", error);
       }
     }
   };
 
   setEnabled = async (type, value) => {
+    const { onError } = this.props;
     try {
       if (type === "camera") {
         await this.videoTrack.setEnabled(value);
@@ -82,11 +89,14 @@ class AGPublish extends Component {
         await this.audioTrack.setEnabled(value);
       }
     } catch (error) {
-      console.log("update enable state error:", error);
+      if (onError && typeof onError === "function") {
+        onError("trackState", error);
+      }
     }
   };
 
   updateTrack = async ({ type, updateType, config }) => {
+    const { onError } = this.props;
     try {
       if (type === "camera") {
         if (this.videoTrack && this.videoTrack !== null) {
@@ -98,11 +108,32 @@ class AGPublish extends Component {
         }
       } else if (type === "mic") {
         if (this.audioTrack && this.audioTrack !== null) {
-          await this.audioTrack.setDevice(config.microphoneId);
+          if (updateType === "encoderConfig") {
+            this.updateAudioTrack();
+          } else {
+            await this.audioTrack.setDevice(config.microphoneId);
+          }
         }
       }
     } catch (error) {
-      console.log("update device error: ", error);
+      if (onError && typeof onError === "function") {
+        onError("updateTrack", error);
+      }
+    }
+  };
+
+  updateAudioTrack = async () => {
+    const { client, micConfig, onError } = this.props;
+    if (client) {
+      try {
+        await client.unpublish(this.audioTrack);
+        this.audioTrack = await AgoraRTC.createMicrophoneAudioTrack(micConfig);
+        await client.publish(this.audioTrack);
+      } catch (error) {
+        if (onError && typeof onError === "function") {
+          onError("updateAudioTrack", error);
+        }
+      }
     }
   };
 
@@ -110,7 +141,7 @@ class AGPublish extends Component {
     const {
       container,
       client,
-      onPublishErr,
+      onError,
       publishAudio,
       publishVideo,
     } = this.props;
@@ -132,9 +163,9 @@ class AGPublish extends Component {
           await this.videoTrack.setEnabled(false);
           await this.audioTrack.setEnabled(false);
         }
-      } catch (err) {
-        if (onPublishErr && typeof onPublishErr === "function") {
-          onPublishErr(err);
+      } catch (error) {
+        if (onError && typeof onError === "function") {
+          onError("publish", error);
         }
       }
     }
@@ -157,9 +188,8 @@ class AGPublish extends Component {
 AGPublish.propTypes = {
   client: PropTypes.object,
   onUnpublish: PropTypes.func,
+  onError: PropTypes.func,
   container: PropTypes.string,
-  onPublishErr: PropTypes.func,
-  onTrackErr: PropTypes.func,
   camera: PropTypes.string,
   mic: PropTypes.string,
   screenConfig: PropTypes.object,

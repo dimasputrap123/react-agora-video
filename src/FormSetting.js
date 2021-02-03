@@ -23,6 +23,14 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
       value: { width: 200, height: 640, frameRate: 30 },
     }, // custom video profile
   ];
+  const audioProfiles = [
+    { label: "speech low quality", value: "speech_low_quality" },
+    { label: "speech standard", value: "speech_standard" },
+    { label: "music standard", value: "music_standard" },
+    { label: "standard stereo", value: "standard_stereo" },
+    { label: "high quality", value: "high_quality" },
+    { label: "high quality stereo", value: "high_quality_stereo" },
+  ];
   const selectHandler = React.useCallback(
     (e) => {
       if (connectState) {
@@ -45,6 +53,9 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
       .getElementById("profile")
       .addEventListener("change", selectHandler);
     document
+      .getElementById("audioProfile")
+      .addEventListener("change", selectHandler);
+    document
       .getElementById("publishVideo")
       .addEventListener("change", selectHandler);
     document
@@ -61,6 +72,9 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
         .getElementById("profile")
         .removeEventListener("change", selectHandler);
       document
+        .getElementById("audioProfile")
+        .removeEventListener("change", selectHandler);
+      document
         .getElementById("publishVideo")
         .removeEventListener("change", selectHandler);
       document
@@ -70,11 +84,18 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
   }, [selectHandler]);
   const setProfiling = () => {
     const profile = document.getElementById("profile");
+    const audioProfile = document.getElementById("audioProfile");
     videoProfiles.forEach((el) => {
       let opt = document.createElement("OPTION");
       opt.innerHTML = el.detail;
       opt.value = el.value;
       profile.append(opt);
+    });
+    audioProfiles.forEach((el) => {
+      let opt = document.createElement("OPTION");
+      opt.innerHTML = el.label;
+      opt.value = el.value;
+      audioProfile.append(opt);
     });
   };
   React.useEffect(() => {
@@ -123,6 +144,14 @@ const FormSetting = ({ onSubmit, onLeave, onSelectChange, connectState }) => {
       <div className="form-group">
         <label>Video Profile</label>
         <select className="form-control" id="profile" name="profile"></select>
+      </div>
+      <div className="form-group">
+        <label>Audio Profile</label>
+        <select
+          className="form-control"
+          id="audioProfile"
+          name="audioProfile"
+        ></select>
       </div>
       <div className="form-check form-check-inline">
         <input
