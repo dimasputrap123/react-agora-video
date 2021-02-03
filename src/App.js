@@ -1,8 +1,9 @@
 import React, { Component } from "react";
 import "./bootstrap.css";
 import "./App.css";
-import { AGPublish, AGRemote, createClient } from "./vendor";
+import { AGPublish, createClient } from "./vendor";
 import FormSetting from "./FormSetting";
+import Remote from "./Remote";
 class App extends Component {
   constructor(props) {
     super(props);
@@ -45,7 +46,6 @@ class App extends Component {
   handleSubmit = (e) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
-    console.log(Object.fromEntries(data));
     const {
       appid,
       token,
@@ -84,6 +84,7 @@ class App extends Component {
       .disconnect()
       .then(() => {
         console.log("leaving success");
+        this.setState({ remoteJoin: [], remotePublished: [] });
         const grid = document.getElementById("gridVideo");
         for (let i = 1; i < grid.childNodes.length; i++) {
           grid.removeChild(grid.childNodes[i]);
@@ -99,7 +100,7 @@ class App extends Component {
   };
 
   remoteError = (type, err) => {
-    console.log(err);
+    console.log(type, err);
   };
 
   render() {
@@ -130,17 +131,13 @@ class App extends Component {
           <div className="gridVideo" id="gridVideo">
             <div className="video" id="local_video"></div>
             {this.state.remoteJoin.map((el, id) => (
-              <React.Fragment key={id}>
-                <div id={`remote-${el.uid}`} className="video"></div>
-                {this.state.remotePublished.hasOwnProperty(el.uid) ? (
-                  <AGRemote
-                    client={this.client.client}
-                    remoteData={this.state.remotePublished[el.uid]}
-                    container={`remote-${el.uid}`}
-                    onError={this.remoteError}
-                  />
-                ) : null}
-              </React.Fragment>
+              <Remote
+                key={id}
+                uid={el.uid}
+                client={this.client.client}
+                remote={this.state.remotePublished}
+                remoteError={this.remoteError}
+              />
             ))}
           </div>
         </div>
