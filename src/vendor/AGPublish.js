@@ -3,6 +3,11 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 
 class AGPublish extends Component {
+  constructor(props) {
+    super(props);
+    this.videoTrack = null;
+    this.audioTrack = null;
+  }
   componentDidMount() {
     this.init();
   }
@@ -53,28 +58,41 @@ class AGPublish extends Component {
   }
 
   init = async () => {
-    if (!this.props.client) {
+    const { client, publishVideo, publishAudio } = this.props;
+    if (!client) {
       return;
     }
-    await this.createTrack();
+    if (publishVideo) {
+      await this.createTrack("camera");
+    }
+    if (publishAudio) {
+      await this.createTrack("mic");
+    }
     await this.playAndPublish();
   };
 
-  createTrack = async () => {
-    const { onError, cameraConfig, micConfig } = this.props;
+  createTrack = async (type) => {
+    const { onError, cameraConfig, micConfig, screenConfig } = this.props;
     let camOpt = { cameraId: "" };
     let micOpt = { microphoneId: "" };
+    let scOpt = { optimizationMode: "detail" };
     if (cameraConfig && typeof cameraConfig === "object") {
       camOpt = { ...camOpt, ...cameraConfig };
     }
     if (micConfig && typeof micConfig === "object") {
       micOpt = { ...micOpt, ...micConfig };
     }
+    if (screenConfig && typeof screenConfig === "object") {
+      scOpt = { ...scOpt, ...screenConfig };
+    }
     try {
-      [this.videoTrack, this.audioTrack] = await Promise.all([
-        AgoraRTC.createCameraVideoTrack(camOpt),
-        AgoraRTC.createMicrophoneAudioTrack(micOpt),
-      ]);
+      if (type === "camera") {
+        this.videoTrack = await AgoraRTC.createCameraVideoTrack(camOpt);
+      } else if (type === "mic") {
+        this.audioTrack = await AgoraRTC.createMicrophoneAudioTrack(micOpt);
+      } else if (type === "screen") {
+        this.videoTrack = await AgoraRTC.createScreenVideoTrack(scOpt);
+      }
     } catch (error) {
       if (onError && typeof onError === "function") {
         onError(error);
@@ -85,37 +103,34 @@ class AGPublish extends Component {
   switchCameraScreen = async (type) => {
     const {
       client,
-      cameraConfig,
       container,
       onError,
-      screenConfig,
       onScreenCancel,
       onScreenStop,
+      publishVideo,
     } = this.props;
-    let camOpt = { cameraId: "" };
-    if (cameraConfig && typeof cameraConfig === "object") {
-      camOpt = { ...camOpt, ...cameraConfig };
-    }
     try {
-      await client.unpublish(this.videoTrack);
-      this.videoTrack.stop();
-      this.videoTrack.close();
-      this.videoTrack =
-        type === "screen"
-          ? await AgoraRTC.createScreenVideoTrack(screenConfig)
-          : await AgoraRTC.createCameraVideoTrack(camOpt);
-      await client.publish(this.videoTrack);
+      if (this.videoTrack !== null) {
+        await client.unpublish(this.videoTrack);
+      }
+      this.clearTrack("camera");
+      if (type === "camera" && publishVideo) {
+        await this.createTrack("camera");
+      } else if (type === "screen") {
+        await this.createTrack("screen");
+      }
+      if (this.videoTrack !== null) {
+        await client.publish(this.videoTrack);
+        this.videoTrack.play(container || "local_container");
+      }
       if (type === "screen") {
         this.videoTrack.once("track-ended", () => {
-          // this.switchCameraScreen("camera");
           if (onScreenStop && typeof onScreenStop === "function")
             onScreenStop();
         });
       }
-      this.videoTrack.play(container || "local_container");
     } catch (error) {
       if (type === "screen") {
-        // this.switchCameraScreen("camera");
         if (onScreenCancel && typeof onScreenCancel === "function") {
           onScreenCancel();
         }
@@ -130,8 +145,16 @@ class AGPublish extends Component {
     const { onError } = this.props;
     try {
       if (type === "camera") {
+        if (this.videoTrack === null) {
+          await this.createTrack("camera");
+          await this.playAndPublish();
+        }
         await this.videoTrack.setEnabled(value);
       } else {
+        if (this.audioTrack === null) {
+          await this.createTrack("mic");
+          await this.playAndPublish();
+        }
         await this.audioTrack.setEnabled(value);
       }
     } catch (error) {
@@ -145,7 +168,7 @@ class AGPublish extends Component {
     const { onError } = this.props;
     try {
       if (type === "camera") {
-        if (this.videoTrack && this.videoTrack !== null) {
+        if (this.videoTrack !== null) {
           if (updateType === "encoderConfig") {
             await this.videoTrack.setEncoderConfiguration(config.encoderConfig);
           } else {
@@ -191,23 +214,17 @@ class AGPublish extends Component {
       publishAudio,
       publishVideo,
     } = this.props;
-    this.videoTrack.play(container || "local_container", {
-      fit: "cover",
-      mirror: true,
-    });
+    if (this.videoTrack !== null) {
+      this.videoTrack.play(container || "local_container");
+    }
     if (client) {
       try {
         if (publishAudio && publishVideo) {
           await client.publish([this.videoTrack, this.audioTrack]);
         } else if (publishVideo) {
-          await this.audioTrack.setEnabled(false);
           await client.publish(this.videoTrack);
         } else if (publishAudio) {
-          await this.videoTrack.setEnabled(false);
           await client.publish(this.audioTrack);
-        } else {
-          await this.videoTrack.setEnabled(false);
-          await this.audioTrack.setEnabled(false);
         }
       } catch (error) {
         if (onError && typeof onError === "function") {
@@ -217,13 +234,17 @@ class AGPublish extends Component {
     }
   };
 
-  clearTrack = () => {
-    this.videoTrack.stop();
-    this.videoTrack.close();
-    this.audioTrack.stop();
-    this.audioTrack.close();
-    this.videoTrack = null;
-    this.audioTrack = null;
+  clearTrack = (type = "") => {
+    if (this.videoTrack !== null && (type === "" || type === "camera")) {
+      this.videoTrack.stop();
+      this.videoTrack.close();
+      this.videoTrack = null;
+    }
+    if (this.audioTrack !== null && (type === "" || type === "mic")) {
+      this.audioTrack.stop();
+      this.audioTrack.close();
+      this.audioTrack = null;
+    }
   };
 
   render() {
