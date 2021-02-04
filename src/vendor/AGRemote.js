@@ -34,12 +34,7 @@ export class AGRemote extends Component {
     } else if (shouldUpdate("", undefined, "subscribeAudio")) {
       this.controlSubs("audio");
     }
-    if (
-      shouldUpdate("video", undefined, "remoteData") ||
-      shouldUpdate("audio", undefined, "remoteData")
-    ) {
-      this.reSubs();
-    }
+    this.reSubs();
   }
 
   controlSubs = (type) => {
@@ -65,18 +60,16 @@ export class AGRemote extends Component {
     const { subscribeVideo, subscribeAudio, remoteData } = this.props;
     const { video, audio, user } = remoteData;
     if (video && user.videoTrack === undefined && subscribeVideo) {
-      console.log("ini reSubs");
       this.subsRemote("video");
     }
     if (audio && user.audioTrack === undefined && subscribeAudio) {
-      console.log("ini reSubs");
       this.subsRemote("audio");
     }
   };
 
   subsRemote = async (type) => {
     const { client, remoteData, onError, container } = this.props;
-    if (remoteData[type]) {
+    if (remoteData[type] && client.connectionState !== "DISCONNECTED") {
       try {
         await client.subscribe(remoteData.user, type);
         if (type === "video") {
@@ -91,7 +84,7 @@ export class AGRemote extends Component {
         }
       } catch (error) {
         if (onError && typeof onError === "function") {
-          onError("subsErr", error);
+          onError(error);
         }
       }
     }
@@ -106,7 +99,7 @@ export class AGRemote extends Component {
       }
     } catch (error) {
       if (onError && typeof onError === "function") {
-        onError("unsubsErr", error);
+        onError(error);
       }
     }
   };
