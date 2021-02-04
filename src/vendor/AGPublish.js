@@ -147,13 +147,13 @@ class AGPublish extends Component {
       if (type === "camera") {
         if (this.videoTrack === null) {
           await this.createTrack("camera");
-          await this.playAndPublish();
+          await this.playAndPublish("camera");
         }
         await this.videoTrack.setEnabled(value);
       } else {
         if (this.audioTrack === null) {
           await this.createTrack("mic");
-          await this.playAndPublish();
+          await this.playAndPublish("mic");
         }
         await this.audioTrack.setEnabled(value);
       }
@@ -192,21 +192,25 @@ class AGPublish extends Component {
   };
 
   updateAudioTrack = async () => {
-    const { client, micConfig, onError } = this.props;
+    const { client, onError, publishAudio } = this.props;
     if (client) {
       try {
-        await client.unpublish(this.audioTrack);
-        this.audioTrack = await AgoraRTC.createMicrophoneAudioTrack(micConfig);
-        await client.publish(this.audioTrack);
+        if (this.audioTrack !== null) {
+          await client.unpublish(this.audioTrack);
+        }
+        if (publishAudio) {
+          await this.createTrack("mic");
+          await client.publish(this.audioTrack);
+        }
       } catch (error) {
         if (onError && typeof onError === "function") {
-          onError("updateAudioTrack", error);
+          onError(error);
         }
       }
     }
   };
 
-  playAndPublish = async () => {
+  playAndPublish = async (type = "") => {
     const {
       container,
       client,
@@ -215,15 +219,17 @@ class AGPublish extends Component {
       publishVideo,
     } = this.props;
     if (this.videoTrack !== null) {
-      this.videoTrack.play(container || "local_container");
+      if (!this.videoTrack.isPlaying) {
+        this.videoTrack.play(container || "local_container");
+      }
     }
     if (client) {
       try {
-        if (publishAudio && publishVideo) {
+        if (type === "" && publishAudio && publishVideo) {
           await client.publish([this.videoTrack, this.audioTrack]);
-        } else if (publishVideo) {
+        } else if (type === "camera" && publishVideo) {
           await client.publish(this.videoTrack);
-        } else if (publishAudio) {
+        } else if (type === "mic" && publishAudio) {
           await client.publish(this.audioTrack);
         }
       } catch (error) {

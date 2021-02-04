@@ -41,14 +41,12 @@ export class AGRemote extends Component {
     const { subscribeVideo, subscribeAudio } = this.props;
     if (type === "video") {
       if (subscribeVideo) {
-        console.log("ini control subs");
         this.subsRemote(type);
       } else {
         this.unSubsRemote(type);
       }
     } else if (type === "audio") {
       if (subscribeAudio) {
-        console.log("ini control subs");
         this.subsRemote(type);
       } else {
         this.unSubsRemote(type);
