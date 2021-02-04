@@ -77,7 +77,7 @@ class AGPublish extends Component {
       ]);
     } catch (error) {
       if (onError && typeof onError === "function") {
-        onError("createTrack", error);
+        onError(error);
       }
     }
   };
@@ -90,6 +90,7 @@ class AGPublish extends Component {
       onError,
       screenConfig,
       onScreenCancel,
+      onScreenStop,
     } = this.props;
     let camOpt = { cameraId: "" };
     if (cameraConfig && typeof cameraConfig === "object") {
@@ -105,9 +106,11 @@ class AGPublish extends Component {
           : await AgoraRTC.createCameraVideoTrack(camOpt);
       await client.publish(this.videoTrack);
       if (type === "screen") {
-        this.videoTrack.once("track-ended", () =>
-          this.switchCameraScreen("camera")
-        );
+        this.videoTrack.once("track-ended", () => {
+          // this.switchCameraScreen("camera");
+          if (onScreenStop && typeof onScreenStop === "function")
+            onScreenStop();
+        });
       }
       this.videoTrack.play(container || "local_container");
     } catch (error) {
@@ -118,7 +121,7 @@ class AGPublish extends Component {
         }
       }
       if (onError && typeof onError === "function") {
-        onError("switchCameraScreen", error);
+        onError(error);
       }
     }
   };
@@ -133,7 +136,7 @@ class AGPublish extends Component {
       }
     } catch (error) {
       if (onError && typeof onError === "function") {
-        onError("trackState", error);
+        onError(error);
       }
     }
   };
@@ -160,7 +163,7 @@ class AGPublish extends Component {
       }
     } catch (error) {
       if (onError && typeof onError === "function") {
-        onError("updateTrack", error);
+        onError(error);
       }
     }
   };
@@ -208,7 +211,7 @@ class AGPublish extends Component {
         }
       } catch (error) {
         if (onError && typeof onError === "function") {
-          onError("publish", error);
+          onError(error);
         }
       }
     }
@@ -232,6 +235,7 @@ AGPublish.propTypes = {
   client: PropTypes.object,
   onUnpublish: PropTypes.func,
   onScreenCancel: PropTypes.func,
+  onScreenStop: PropTypes.func,
   onError: PropTypes.func,
   container: PropTypes.string,
   camera: PropTypes.string,
