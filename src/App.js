@@ -31,10 +31,10 @@ class App extends Component {
     }));
   };
   publishHandler = (e) => {
-    this.setState((prevState) => ({
-      ...prevState,
-      remotePublished: { ...prevState.remotePublished, ...e },
-    }));
+    this.setState({
+      ...this.state,
+      remotePublished: { ...this.state.remotePublished, ...e },
+    });
   };
   errHandler = (e) => {
     console.log(e);
@@ -94,7 +94,7 @@ class App extends Component {
       .disconnect()
       .then(() => {
         console.log("leaving success");
-        this.setState({ remoteJoin: [], remotePublished: [] });
+        this.setState({ remoteJoin: [], remotePublished: {} });
         const grid = document.getElementById("gridVideo");
         for (let i = 1; i < grid.childNodes.length; i++) {
           grid.removeChild(grid.childNodes[i]);
@@ -109,8 +109,8 @@ class App extends Component {
     this.setState({ ...this.state, [name]: value });
   };
 
-  remoteError = (type, err) => {
-    console.log(type, err);
+  remoteError = (err) => {
+    console.log(err);
   };
 
   render() {
@@ -142,9 +142,8 @@ class App extends Component {
               }}
               screenShare={this.state.screenShare}
               screenConfig={{ encoderConfig: this.state.screenProfile }}
-              onScreenCancel={() =>
-                this.setState({ ...this.state, screenShare: false })
-              }
+              onScreenCancel={this.handleScreenShare}
+              onScreenStop={this.handleScreenShare}
             />
           )}
           <div className="gridVideo" id="gridVideo">
