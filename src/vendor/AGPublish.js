@@ -103,7 +103,6 @@ class AGPublish extends Component {
   switchCameraScreen = async (type) => {
     const {
       client,
-      container,
       onError,
       onScreenCancel,
       onScreenStop,
@@ -119,10 +118,7 @@ class AGPublish extends Component {
       } else if (type === "screen") {
         await this.createTrack("screen");
       }
-      if (this.videoTrack !== null) {
-        await client.publish(this.videoTrack);
-        this.videoTrack.play(container || "local_container");
-      }
+      this.playAndPublish(type);
       if (type === "screen") {
         this.videoTrack.once("track-ended", () => {
           if (onScreenStop && typeof onScreenStop === "function")
@@ -227,7 +223,7 @@ class AGPublish extends Component {
       try {
         if (type === "" && publishAudio && publishVideo) {
           await client.publish([this.videoTrack, this.audioTrack]);
-        } else if (type === "camera" && publishVideo) {
+        } else if ((type === "camera" && publishVideo) || type === "screen") {
           await client.publish(this.videoTrack);
         } else if (type === "mic" && publishAudio) {
           await client.publish(this.audioTrack);
@@ -254,7 +250,11 @@ class AGPublish extends Component {
   };
 
   render() {
-    return !this.props.container && <div id="local_container"></div>;
+    return (
+      !this.props.container && (
+        <div className={this.props.containerClass} id="local_container"></div>
+      )
+    );
   }
 }
 
@@ -265,8 +265,9 @@ AGPublish.propTypes = {
   onScreenStop: PropTypes.func,
   onError: PropTypes.func,
   container: PropTypes.string,
-  camera: PropTypes.string,
-  mic: PropTypes.string,
+  containerClass: PropTypes.string,
+  cameraConfig: PropTypes.object,
+  micConfig: PropTypes.object,
   screenConfig: PropTypes.object,
   publishVideo: PropTypes.bool,
   publishAudio: PropTypes.bool,
