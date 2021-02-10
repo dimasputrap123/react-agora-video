@@ -55,44 +55,6 @@ const FormSetting = ({
     },
     [connectState, onSelectChange]
   );
-  React.useEffect(() => {
-    document
-      .getElementById("cameras")
-      .addEventListener("change", selectHandler);
-    document.getElementById("mics").addEventListener("change", selectHandler);
-    document
-      .getElementById("profile")
-      .addEventListener("change", selectHandler);
-    document
-      .getElementById("audioProfile")
-      .addEventListener("change", selectHandler);
-    document
-      .getElementById("publishVideo")
-      .addEventListener("change", selectHandler);
-    document
-      .getElementById("publishAudio")
-      .addEventListener("change", selectHandler);
-    return () => {
-      document
-        .getElementById("cameras")
-        .removeEventListener("change", selectHandler);
-      document
-        .getElementById("mics")
-        .removeEventListener("change", selectHandler);
-      document
-        .getElementById("profile")
-        .removeEventListener("change", selectHandler);
-      document
-        .getElementById("audioProfile")
-        .removeEventListener("change", selectHandler);
-      document
-        .getElementById("publishVideo")
-        .removeEventListener("change", selectHandler);
-      document
-        .getElementById("publishAudio")
-        .removeEventListener("change", selectHandler);
-    };
-  }, [selectHandler]);
   const setProfiling = () => {
     const profile = document.getElementById("profile");
     const audioProfile = document.getElementById("audioProfile");
@@ -153,15 +115,15 @@ const FormSetting = ({
       </div>
       <div className="form-group">
         <label>Camera</label>
-        <select className="form-control" id="cameras" name="camera"></select>
+        <select onChange={selectHandler} className="form-control" id="cameras" name="camera"></select>
       </div>
       <div className="form-group">
         <label>Microphone</label>
-        <select className="form-control" id="mics" name="mic"></select>
+        <select onChange={selectHandler} className="form-control" id="mics" name="mic"></select>
       </div>
       <div className="form-group">
         <label>Video Profile</label>
-        <select className="form-control" id="profile" name="profile"></select>
+        <select onChange={selectHandler} className="form-control" id="profile" name="profile"></select>
       </div>
       <div className="form-group">
         <label>Audio Profile</label>
@@ -169,6 +131,7 @@ const FormSetting = ({
           className="form-control"
           id="audioProfile"
           name="audioProfile"
+          onChange={selectHandler}
         ></select>
       </div>
       <div className="form-group">
@@ -185,6 +148,7 @@ const FormSetting = ({
           type="checkbox"
           id="publishVideo"
           name="publishVideo"
+          onChange={selectHandler}
         />
         <label className="form-check-label">Camera</label>
       </div>
@@ -194,6 +158,7 @@ const FormSetting = ({
           type="checkbox"
           id="publishAudio"
           name="publishAudio"
+          onChange={selectHandler}
         />
         <label className="form-check-label">Microphone</label>
       </div>
